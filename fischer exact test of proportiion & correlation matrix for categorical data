@@ -1,0 +1,52 @@
+#categorical data used for a fischer exact test of proprtions & correlation matrix with two data. One is already binary, the other was data mapped as binary
+
+import pandas as pd
+from scipy.stats import fisher_exact
+import matplotlib.pyplot as plt
+from statsmodels.graphics.mosaicplot import mosaic
+data = pd.read_excel("")
+name_copy = data.copy()
+name_copy["combined column"] = name_copy["columndata1"].fillna(name_copy["columndata2"]) #combine data.
+name_copy["condition_mapped"] = name_copy["Condition"].map({'Control': 0, 'experimental': 1}) #binary experimental vs control
+
+#Contingency Table
+contingency_table = pd.crosstab(name_copy["condition_mapped"], name_copy["outcome"])
+
+#Fisher's Exact Test
+odds_ratio, p_value = fisher_exact(contingency_table)
+print("Fisher's Exact Test Result:")
+print("Odds Ratio:", odds_ratio)
+print("p-value:", p_value)
+
+#stacked Bar Chart
+contingency_table.index = ["Control", "Experimental"]
+contingency_table.columns = ["Choice 1", "Choice 2"]
+proportions = contingency_table.div(contingency_table.sum(axis=1), axis=0)
+#stacked bar chart
+proportions.plot(kind="bar", stacked=True, color=['skyblue', 'salmon'])
+plt.title("Proportion of Scenario Choices by Condition (Experimental vs Control)")
+plt.xlabel("Condition")
+plt.ylabel("Proportion")
+plt.legend(title="Scenario Choice")
+plt.xticks(rotation=0)
+plt.show()
+
+#numbers inside the each bar
+for i, row in enumerate(contingency_table.values):
+for j, value in enumerate(row):
+plt.text(i, sum(row[:j+1]) - value / 2, str(value), ha='center', va='center', color="black")
+
+#mosaic plot of proportions
+#dictionary for the plot
+mosaic_data = {
+('Control', 'Choice1'): contingency_table.loc['Control', 'Choice1'],
+('Control', 'Choice2'): contingency_table.loc['Control', 'Choice2'],
+('Experimental', 'Choice1'): contingency_table.loc['Experimental', 'Choice1'],
+('Experimental', 'Choice2'): contingency_table.loc['Experimental', 'Choice2'],
+}
+
+plt.figure(figsize=(8, 6))
+mosaic(mosaic_data, title="Experimental vs Control", gap=0.02)
+plt.xlabel("Condition and Scenario Choice")
+plt.ylabel("Proportion")
+plt.show()``
